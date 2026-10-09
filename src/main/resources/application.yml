@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ibm-mq-spring-template-lab
+  main:
+    web-application-type: none
+    banner-mode: off
+logging:
+  level:
+    root: WARN
+    dev.sdxcod.springmqlab: INFO
+lab:
+  command: help
+  data-directory: ${LAB_DATA_DIRECTORY:data}
+  password-file: ${LAB_MQ_PASSWORD_FILE:.secrets/mqAppPassword}
+  password: ${LAB_MQ_PASSWORD:}
+  user: ${LAB_MQ_USER:app}
+  settings-url: ${LAB_SETTINGS_URL:http://localhost:8088/queue-settings}
+  settings-poll-ms: 2000
+  settings-failure-ms: 3000
+  settings-max-age-ms: 15000
+  http-timeout-ms: 2000
+  idle-delay-ms: 500
+  reject-prefix: 'FAIL:'
+  mq:
+    host: ${LAB_MQ_HOST:localhost}
+    port: ${LAB_MQ_PORT:1414}
+    queue-manager: ${LAB_MQ_QMGR:QM1}
+    channel: ${LAB_MQ_CHANNEL:DEV.APP.SVRCONN}
+    in-queue: ${LAB_MQ_IN_QUEUE:DEV.LAB.IN}
+    out-queue: ${LAB_MQ_OUT_QUEUE:DEV.LAB.OUT}
+    test-queue: ${LAB_MQ_TEST_QUEUE:DEV.LAB.TEST}

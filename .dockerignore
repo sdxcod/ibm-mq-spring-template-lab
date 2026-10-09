@@ -1,0 +1,12 @@
+target
+.git
+.secrets
+data
+mock/state
+.env*
+.idea
+.vscode
+
+__pycache__/
+*.pyc
+data-*

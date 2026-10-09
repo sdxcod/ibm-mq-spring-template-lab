@@ -1,0 +1,14 @@
+/target/
+/.secrets/
+/data/
+/mock/state/
+.env
+.env.*
+.idea/
+.vscode/
+*.log
+.DS_Store
+
+__pycache__/
+*.pyc
+/data-*/

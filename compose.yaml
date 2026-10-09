@@ -1,0 +1,62 @@
+name: ibm-mq-spring-template-lab
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:9.4.0.25-r2
+    platform: linux/amd64
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_DEV: "true"
+      MQ_CONNAUTH_USE_HTP: "true"
+    ports: ["127.0.0.1:1414:1414", "127.0.0.1:9443:9443"]
+    volumes:
+      - mq-data:/mnt/mqm
+      - ./docker/mq/20-lab.mqsc:/etc/mqm/20-lab.mqsc:ro
+    secrets: [mqAppPassword, mqAdminPassword]
+    healthcheck:
+      test: ["CMD", "chkmqready"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 30
+  mock:
+    image: python:3.13-alpine
+    command: ["python", "/mock/server.py"]
+    environment:
+      MOCK_BIND: 0.0.0.0
+      MOCK_PORT: "8080"
+      MOCK_FIXTURE: /mock/queue-settings.json
+      MOCK_STATE_FILE: /state/queue-settings.json
+    ports: ["127.0.0.1:8088:8080"]
+    volumes:
+      - ./mock/server.py:/mock/server.py:ro
+      - ./mock/queue-settings.json:/mock/queue-settings.json:ro
+      - mock-state:/state
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  agent:
+    profiles: [agent]
+    image: ibm-mq-spring-template-lab:0.1.0
+    build: .
+    environment:
+      LAB_SETTINGS_URL: http://mock:8080/queue-settings/container
+      LAB_MQ_HOST: mq
+      LAB_MQ_PASSWORD_FILE: /run/secrets/mqAppPassword
+      LAB_DATA_DIRECTORY: /app/data
+    secrets: [mqAppPassword]
+    volumes: [agent-data:/app/data]
+    depends_on:
+      mq: {condition: service_healthy}
+      mock: {condition: service_healthy}
+    command: ["--lab.command=agent"]
+    stop_grace_period: 30s
+volumes:
+  mq-data:
+  mock-state:
+  agent-data:
+secrets:
+  mqAppPassword: {file: ./.secrets/mqAppPassword}
+  mqAdminPassword: {file: ./.secrets/mqAdminPassword}

@@ -1,0 +1,16 @@
+{
+  "revision": 1,
+  "enabled": true,
+  "host": "localhost",
+  "port": 1414,
+  "queue-manager": "QM1",
+  "channel": "DEV.APP.SVRCONN",
+  "inward-queue": "DEV.LAB.IN",
+  "outward-queue": "DEV.LAB.OUT",
+  "inward-batch-count": 5,
+  "outward-batch-count": 5,
+  "inward-interval-ms": 2000,
+  "outward-interval-ms": 3000,
+  "failure-retry-ms": 3000,
+  "receive-timeout-ms": 1000
+}

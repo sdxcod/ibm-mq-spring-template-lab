@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mq
+spec:
+  clusterIP: None
+  selector:
+    app: mq
+  ports:
+    - name: mq
+      port: 1414
+    - name: console
+      port: 9443
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mq
+spec:
+  serviceName: mq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mq
+  template:
+    metadata:
+      labels:
+        app: mq
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: mq
+          image: icr.io/ibm-messaging/mq:9.4.0.25-r2
+          env:
+            - {name: LICENSE, value: accept}
+            - {name: MQ_QMGR_NAME, value: QM1}
+            - {name: MQ_DEV, value: "true"}
+            - {name: MQ_CONNAUTH_USE_HTP, value: "true"}
+          ports:
+            - {name: mq, containerPort: 1414}
+            - {name: console, containerPort: 9443}
+          resources:
+            requests: {cpu: 500m, memory: 1Gi}
+            limits: {cpu: "2", memory: 2Gi}
+          startupProbe:
+            exec: {command: [chkmqready]}
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            exec: {command: [chkmqready]}
+            periodSeconds: 10
+          livenessProbe:
+            exec: {command: [chkmqhealthy]}
+            periodSeconds: 20
+          volumeMounts:
+            - {name: data, mountPath: /mnt/mqm}
+            - {name: mqsc, mountPath: /etc/mqm/20-lab.mqsc, subPath: 20-lab.mqsc, readOnly: true}
+            - {name: passwords, mountPath: /run/secrets, readOnly: true}
+      volumes:
+        - name: mqsc
+          configMap:
+            name: mq-lab-config
+        - name: passwords
+          secret:
+            secretName: mq-lab-passwords
+            defaultMode: 0444
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 2Gi

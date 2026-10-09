@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: agent-data}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 1Gi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: agent}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: agent}}
+  template:
+    metadata: {labels: {app: agent}}
+    spec:
+      nodeSelector: {kubernetes.io/arch: amd64}
+      terminationGracePeriodSeconds: 30
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001}
+      containers:
+        - name: agent
+          image: ibm-mq-spring-template-lab:0.1.0
+          imagePullPolicy: Never
+          args: ['--lab.command=agent']
+          env:
+            - {name: LAB_SETTINGS_URL, value: 'http://mock:8080/queue-settings/container'}
+            - {name: LAB_MQ_HOST, value: mq}
+            - {name: LAB_MQ_PASSWORD_FILE, value: /run/secrets/mqAppPassword}
+            - {name: LAB_DATA_DIRECTORY, value: /app/data}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: '1', memory: 512Mi}
+          volumeMounts:
+            - {name: data, mountPath: /app/data}
+            - {name: passwords, mountPath: /run/secrets, readOnly: true}
+      volumes:
+        - {name: data, persistentVolumeClaim: {claimName: agent-data}}
+        - name: passwords
+          secret:
+            secretName: mq-lab-passwords
+            defaultMode: 0444
+            items: [{key: mqAppPassword, path: mqAppPassword}]
