@@ -151,17 +151,4 @@ python3 -m unittest discover -s mock/tests -v
 
 Logs intentionally show exception class and committed counts without passwords. The interactive CLI may show provider details to the local operator. For failures inspect server/channel logs as well; keep secrets out of pasted diagnostics.
 
-## GitHub
-
-```bash
-git init
-git add .
-git commit -m 'Add explicit Spring JMS scheduled IBM MQ lab'
-git branch -M main
-git remote add origin YOUR_REPOSITORY_URL
-git push -u origin main
-```
-
-Review `git status --short` before committing: `.secrets`, `data`, `mock/state`, build artifacts and local environment files are ignored. `.github/workflows/verify.yml` runs unit/Python tests and a separate live MQ job that provisions its own server and secrets. The workflow requires GitHub-hosted runner capacity and network access to Maven/image registries. Publication credentials remain local; none are embedded in this project.
-
 References: [IBM MQ container project](https://github.com/ibm-messaging/mq-container), [IBM MQ documentation](https://www.ibm.com/docs/en/ibm-mq/9.4.x), [Spring JMS reference](https://docs.spring.io/spring-framework/reference/integration/jms/using.html).
